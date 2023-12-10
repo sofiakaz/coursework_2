@@ -127,9 +127,8 @@ SET duration =
  
 SELECT song_name, duration
 FROM song
-ORDER BY 
-    (SPLIT_PART(duration, ':', 1)::INT * 60 + SPLIT_PART(duration, ':', 2)::INT) DESC
-LIMIT 1;
+WHERE (SPLIT_PART(duration, ':', 1)::INT * 60 + SPLIT_PART(duration, ':', 2)::INT) = 
+    (SELECT MAX(SPLIT_PART(duration, ':', 1)::INT * 60 + SPLIT_PART(duration, ':', 2)::INT) FROM song);
 
 SELECT song_name, duration
 FROM song
@@ -165,9 +164,12 @@ GROUP BY a.title;
 
 SELECT a.nickname AS artist_name
 FROM artist a
-LEFT JOIN albums_and_artists aa ON a.artist_id = aa.artist_id
-LEFT JOIN album al ON aa.album_id = al.album_id
-WHERE al.year_of_issue IS NULL OR al.year_of_issue <> 2020;
+WHERE a.artist_id NOT IN (
+    SELECT DISTINCT aa.artist_id
+    FROM albums_and_artists aa
+    JOIN album al ON aa.album_id = al.album_id
+    WHERE al.year_of_issue = 2020
+);
 
 SELECT sb.title AS songbook_title
 FROM songbook sb
